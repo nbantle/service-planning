@@ -98,9 +98,28 @@
   }
 
   main {
-    max-width: 680px;
+    max-width: 1080px;
     margin: 0 auto;
-    padding: 24px 20px 8px;
+    padding: 24px 24px 8px;
+  }
+  @media (min-width: 861px) {
+    main {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      column-gap: 28px;
+      align-items: start;
+      grid-template-areas:
+        "bapt comm"
+        "cmn  imp"
+        "res  res";
+    }
+    section[aria-labelledby="baptisms-title"]      { grid-area: bapt; margin-top: 0; }
+    section[aria-labelledby="communicators-title"] { grid-area: comm; margin-top: 0; }
+    section[aria-labelledby="communion-title"]     { grid-area: cmn; }
+    section[aria-labelledby="important-title"]     { grid-area: imp; }
+    section[aria-labelledby="resources-title"]     { grid-area: res; }
+    section[aria-labelledby="resources-title"] .links,
+    section[aria-labelledby="resources-title"] .lede { max-width: 680px; margin-left: auto; margin-right: auto; }
   }
   .lede {
     font-size: 1rem;
@@ -384,19 +403,6 @@
 </header>
 
 <main>
-  <section class="data-section" aria-labelledby="communicators-title">
-    <h2 id="communicators-title">Upcoming Communicators</h2>
-    <div class="section-rule" aria-hidden="true"></div>
-    <div class="row-list">
-      <div class="list-row"><span class="row-name">Jason</span><span class="row-when">Sun, Aug 30</span></div>
-      <div class="list-row"><span class="row-name">Luan</span><span class="row-when">Sun, Sep 6</span></div>
-      <div class="list-row"><span class="row-name">Drew</span><span class="row-when">Sun, Sep 13</span></div>
-      <div class="list-row"><span class="row-name">Drew</span><span class="row-when">Sun, Sep 20</span></div>
-      <div class="list-row"><span class="row-name">Drew</span><span class="row-when">Sun, Sep 27</span></div>
-    </div>
-    <p class="section-note">Next five, from column&nbsp;I of the Preaching Calendar &middot; updated Aug&nbsp;25, 2026</p>
-  </section>
-
   <section class="data-section" aria-labelledby="baptisms-title">
     <h2 id="baptisms-title">Upcoming Baptisms</h2>
     <div class="section-rule" aria-hidden="true"></div>
@@ -411,6 +417,22 @@
       <div class="baptism-row"><span class="b-name">Alyssa Thompson <span class="b-campus">ROC</span></span><span class="b-when">Sun, Oct 11 &middot; 8:30 AM</span></div>
     </div>
     <p class="section-note">Baptism ready, from the Rock Connection Board &middot; updated Aug&nbsp;25, 2026</p>
+  </section>
+
+  <section class="data-section" aria-labelledby="communicators-title">
+    <h2 id="communicators-title">Upcoming Communicators</h2>
+    <div class="section-rule" aria-hidden="true"></div>
+    <div class="row-list">
+      <div class="list-row"><span class="row-name">Jason</span><span class="row-when">Sun, Aug 30</span></div>
+      <div class="list-row"><span class="row-name">Luan</span><span class="row-when">Sun, Sep 6</span></div>
+      <div class="list-row"><span class="row-name">Drew</span><span class="row-when">Sun, Sep 13</span></div>
+      <div class="list-row"><span class="row-name">Drew</span><span class="row-when">Sun, Sep 20</span></div>
+      <div class="list-row"><span class="row-name">Drew</span><span class="row-when">Sun, Sep 27</span></div>
+      <div class="list-row"><span class="row-name">Drew</span><span class="row-when">Sun, Oct 4</span></div>
+      <div class="list-row"><span class="row-name">Drew</span><span class="row-when">Sun, Oct 11</span></div>
+      <div class="list-row"><span class="row-name">Drew</span><span class="row-when">Sun, Oct 18</span></div>
+    </div>
+    <p class="section-note">Next eight weeks, from column&nbsp;I of the Preaching Calendar &middot; updated Aug&nbsp;25, 2026</p>
   </section>
 
   <section class="data-section" aria-labelledby="communion-title">
@@ -443,6 +465,17 @@
       </div>
     </div>
     <p class="section-note">Next six months, from column&nbsp;L of the Preaching Calendar &middot; updated Aug&nbsp;25, 2026</p>
+  </section>
+
+  <section class="data-section" aria-labelledby="important-title">
+    <h2 id="important-title">Important Dates</h2>
+    <div class="section-rule" aria-hidden="true"></div>
+    <div class="row-list">
+      <div class="list-row"><span class="row-name">Labor Day 9/7</span><span class="row-when">Sun, Sep 6, 2026</span></div>
+      <div class="list-row"><span class="row-name">Columbus Day 10/12</span><span class="row-when">Sun, Oct 11, 2026</span></div>
+      <div class="list-row"><span class="row-name">Daylight Savings</span><span class="row-when">Sun, Nov 1, 2026</span></div>
+    </div>
+    <p class="section-note">Next three, from column&nbsp;C of the Preaching Calendar &middot; updated Aug&nbsp;25, 2026</p>
   </section>
 
   <section class="data-section" aria-labelledby="resources-title">
@@ -519,19 +552,6 @@
     </a>
 
   </nav>
-  </section>
-
-  <section class="data-section" aria-labelledby="important-title">
-    <h2 id="important-title">Important Dates</h2>
-    <div class="section-rule" aria-hidden="true"></div>
-    <div class="row-list">
-      <div class="list-row"><span class="row-name">Labor Day 9/7</span><span class="row-when">Sun, Sep 6, 2026</span></div>
-      <div class="list-row"><span class="row-name">Columbus Day 10/12</span><span class="row-when">Sun, Oct 11, 2026</span></div>
-      <div class="list-row"><span class="row-name">Daylight Savings</span><span class="row-when">Sun, Nov 1, 2026</span></div>
-      <div class="list-row"><span class="row-name">Christmas Eve</span><span class="row-when">Thu, Dec 24, 2026</span></div>
-      <div class="list-row"><span class="row-name">Superbowl Sunday / Valentine's Day</span><span class="row-when">Sun, Feb 14, 2027</span></div>
-    </div>
-    <p class="section-note">Next five, from column&nbsp;C of the Preaching Calendar &middot; updated Aug&nbsp;25, 2026</p>
   </section>
 </main>
 
