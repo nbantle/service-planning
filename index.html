@@ -106,7 +106,6 @@
         "sun  sun"
         "bapt comm"
         "cmn  imp"
-        "ser  ser"
         "res  res";
     }
     section[aria-labelledby="this-sunday-title"]   { grid-area: sun; margin-top: 0; }
@@ -114,8 +113,7 @@
     section[aria-labelledby="communicators-title"] { grid-area: comm; }
     section[aria-labelledby="communion-title"]     { grid-area: cmn; }
     section[aria-labelledby="important-title"]     { grid-area: imp; }
-    section[aria-labelledby="series-title"]        { grid-area: ser; }
-    section[aria-labelledby="resources-title"]     { grid-area: res; }
+section[aria-labelledby="resources-title"]     { grid-area: res; }
     section[aria-labelledby="resources-title"] .links,
     section[aria-labelledby="resources-title"] .lede { max-width: 680px; margin-left: auto; margin-right: auto; }
   }
@@ -435,24 +433,7 @@
     padding: 4px 10px;
   }
 
-  /* ── Current Series ────────────────────────────────────────── */
-  .series-header-row {
-    background: rgba(242,198,89,0.12);
-  }
-  .series-header-row .row-name {
-    color: var(--nr-link);
-    letter-spacing: 0.06em;
-  }
-  .series-week-message {
-    font-style: italic;
-    font-weight: 400;
-    text-transform: none;
-    letter-spacing: 0;
-    font-size: 0.8rem;
-    color: var(--nr-gray);
-  }
-
-  @media (prefers-reduced-motion: reduce) {
+@media (prefers-reduced-motion: reduce) {
     .link-card, .link-card::before, .go { transition: none; }
     .link-card:hover, .link-card:focus-visible { transform: none; }
   }
@@ -583,27 +564,7 @@
     <p class="section-note">Next six, from columns&nbsp;C and&nbsp;D of the Preaching Calendar &middot; updated Aug&nbsp;27, 2026</p>
   </section>
 
-  <section class="data-section" aria-labelledby="series-title">
-    <h2 id="series-title">Current Series</h2>
-    <div class="section-rule" aria-hidden="true"></div>
-    <div class="row-list">
-      <div class="list-row series-header-row">
-        <span class="row-name">Volume Up</span>
-        <span class="row-when">Aug 23 &ndash; Sep 6, 2026</span>
-      </div>
-      <div class="list-row">
-        <span class="row-name">Aug 30 &middot; Jason</span>
-        <span class="row-when series-week-message">How do we respond when it feels like God has forgotten us</span>
-      </div>
-      <div class="list-row">
-        <span class="row-name">Sep 6 &middot; Luan</span>
-        <span class="row-when series-week-message">A life rooted in God&rsquo;s Word</span>
-      </div>
-    </div>
-    <p class="section-note">Remaining weeks, column H of the Preaching Calendar &middot; updated Aug&nbsp;27, 2026</p>
-  </section>
-
-  <section class="data-section" aria-labelledby="resources-title">
+<section class="data-section" aria-labelledby="resources-title">
     <h2 id="resources-title">Resources</h2>
     <div class="section-rule" aria-hidden="true"></div>
     <p class="lede">Everything we open in a service planning meeting, one click away.</p>
