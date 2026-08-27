@@ -109,14 +109,18 @@
       column-gap: 28px;
       align-items: start;
       grid-template-areas:
+        "sun  sun"
         "bapt comm"
         "cmn  imp"
+        "ser  ser"
         "res  res";
     }
-    section[aria-labelledby="baptisms-title"]      { grid-area: bapt; margin-top: 0; }
-    section[aria-labelledby="communicators-title"] { grid-area: comm; margin-top: 0; }
+    section[aria-labelledby="this-sunday-title"]   { grid-area: sun; margin-top: 0; }
+    section[aria-labelledby="baptisms-title"]      { grid-area: bapt; }
+    section[aria-labelledby="communicators-title"] { grid-area: comm; }
     section[aria-labelledby="communion-title"]     { grid-area: cmn; }
     section[aria-labelledby="important-title"]     { grid-area: imp; }
+    section[aria-labelledby="series-title"]        { grid-area: ser; }
     section[aria-labelledby="resources-title"]     { grid-area: res; }
     section[aria-labelledby="resources-title"] .links,
     section[aria-labelledby="resources-title"] .lede { max-width: 680px; margin-left: auto; margin-right: auto; }
@@ -381,6 +385,79 @@
     letter-spacing: 0.04em;
   }
 
+  /* ── This Sunday hero ─────────────────────────────────────── */
+  .hero-banner {
+    background: var(--nr-black);
+    border-radius: 4px;
+    border-top: 3px solid var(--nr-gold);
+    padding: 22px 24px 20px;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(36,31,32,0.14);
+  }
+  .hero-eyebrow {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.7rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--nr-gold);
+    margin: 0 0 10px;
+  }
+  .hero-series-name {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(1.35rem, 3.5vw, 2rem);
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--nr-white);
+    margin: 0 0 8px;
+    line-height: 1.1;
+  }
+  .hero-message {
+    font-size: 0.9rem;
+    color: rgba(255,255,255,0.65);
+    font-style: italic;
+    margin: 0 0 14px;
+    text-wrap: balance;
+    max-width: 540px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .hero-chips {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .hero-chip {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.65rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--nr-black);
+    background: var(--nr-gold);
+    border-radius: 3px;
+    padding: 4px 10px;
+  }
+
+  /* ── Current Series ────────────────────────────────────────── */
+  .series-header-row {
+    background: rgba(242,198,89,0.12);
+  }
+  .series-header-row .row-name {
+    color: var(--nr-link);
+    letter-spacing: 0.06em;
+  }
+  .series-week-message {
+    font-style: italic;
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: 0;
+    font-size: 0.8rem;
+    color: var(--nr-gray);
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .link-card, .link-card::before, .go { transition: none; }
     .link-card:hover, .link-card:focus-visible { transform: none; }
@@ -403,6 +480,21 @@
 </header>
 
 <main>
+  <section class="data-section" aria-labelledby="this-sunday-title">
+    <h2 id="this-sunday-title">This Sunday</h2>
+    <div class="section-rule" aria-hidden="true"></div>
+    <div class="hero-banner">
+      <p class="hero-eyebrow">Sun, Aug 30, 2026</p>
+      <p class="hero-series-name">Volume Up</p>
+      <p class="hero-message">&ldquo;How do we respond when it feels like God has forgotten us&rdquo;</p>
+      <div class="hero-chips">
+        <span class="hero-chip">Jason</span>
+        <span class="hero-chip">Psalm 77</span>
+      </div>
+    </div>
+    <p class="section-note">Upcoming service, from the Preaching Calendar &middot; updated Aug&nbsp;27, 2026</p>
+  </section>
+
   <section class="data-section" aria-labelledby="baptisms-title">
     <h2 id="baptisms-title">Upcoming Baptisms</h2>
     <div class="section-rule" aria-hidden="true"></div>
@@ -479,6 +571,26 @@
       <div class="list-row"><span class="row-name">Brighton Birthday</span><span class="row-when">Sun, Nov 1, 2026</span></div>
     </div>
     <p class="section-note">Next six, from columns&nbsp;C and&nbsp;D of the Preaching Calendar &middot; updated Aug&nbsp;27, 2026</p>
+  </section>
+
+  <section class="data-section" aria-labelledby="series-title">
+    <h2 id="series-title">Current Series</h2>
+    <div class="section-rule" aria-hidden="true"></div>
+    <div class="row-list">
+      <div class="list-row series-header-row">
+        <span class="row-name">Volume Up</span>
+        <span class="row-when">Aug 23 &ndash; Sep 6, 2026</span>
+      </div>
+      <div class="list-row">
+        <span class="row-name">Aug 30 &middot; Jason</span>
+        <span class="row-when series-week-message">How do we respond when it feels like God has forgotten us</span>
+      </div>
+      <div class="list-row">
+        <span class="row-name">Sep 6 &middot; Luan</span>
+        <span class="row-when series-week-message">A life rooted in God&rsquo;s Word</span>
+      </div>
+    </div>
+    <p class="section-note">Remaining weeks, column H of the Preaching Calendar &middot; updated Aug&nbsp;27, 2026</p>
   </section>
 
   <section class="data-section" aria-labelledby="resources-title">
