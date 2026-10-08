@@ -1,0 +1,736 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Roku TV Manager</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📺</text></svg>">
+<style>
+  :root {
+    --bg: #f4f5f7; --panel: #ffffff; --text: #1c1f24; --muted: #646b76; --line: #e2e5ea;
+    --accent: #5b2dbf; --accent-text: #ffffff; --chip: #eef0f3;
+    --on: #1f9d55; --on-bg: #e3f5ea; --standby: #b7791f; --standby-bg: #fbf0dc;
+    --offline: #9aa1ab; --offline-bg: #eceef1; --err: #c53030; --err-bg: #fde8e8;
+    --radius: 12px; --shadow: 0 1px 2px rgba(0,0,0,.05), 0 2px 8px rgba(0,0,0,.04);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #121419; --panel: #1b1e25; --text: #e7e9ee; --muted: #9aa1ad; --line: #2b2f38;
+      --accent: #9b7bff; --accent-text: #120a2b; --chip: #252932;
+      --on: #4ade80; --on-bg: #163223; --standby: #f6c453; --standby-bg: #3a2f14;
+      --offline: #7c838f; --offline-bg: #262a32; --err: #f87171; --err-bg: #3b1a1a;
+      --shadow: none;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+    font: 15px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+  header { background: var(--panel); border-bottom: 1px solid var(--line); }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 16px; }
+  .top { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; padding: 14px 0 10px; }
+  h1 { font-size: 20px; margin: 0; margin-right: auto; }
+  h2 { font-size: 17px; margin: 0 0 12px; }
+  h3 { font-size: 14px; margin: 18px 0 8px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+  .summary { display: flex; gap: 8px; flex-wrap: wrap; }
+  .chip { background: var(--chip); border-radius: 999px; padding: 3px 10px; font-size: 13px; color: var(--muted); white-space: nowrap; }
+  .chip b { color: var(--text); }
+  nav { display: flex; gap: 4px; overflow-x: auto; }
+  nav button { background: none; border: 0; border-bottom: 2px solid transparent; padding: 10px 12px; font: inherit;
+    color: var(--muted); cursor: pointer; white-space: nowrap; }
+  nav button.active { color: var(--text); border-color: var(--accent); font-weight: 600; }
+  main.wrap { padding-top: 20px; padding-bottom: 60px; }
+  section[hidden] { display: none; }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow); }
+  .panel + .panel { margin-top: 16px; }
+  .muted { color: var(--muted); }
+  .small { font-size: 13px; }
+  button.btn, .btn { font: inherit; font-size: 14px; border: 1px solid var(--line); background: var(--panel); color: var(--text);
+    border-radius: 8px; padding: 6px 11px; cursor: pointer; white-space: nowrap; }
+  .btn:hover { border-color: var(--muted); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-text); font-weight: 600; }
+  .btn.danger { color: var(--err); }
+  .btn:disabled { opacity: .5; cursor: default; }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  input[type=text], input[type=number], input[type=time], select {
+    font: inherit; font-size: 14px; color: var(--text); background: var(--bg); border: 1px solid var(--line);
+    border-radius: 8px; padding: 6px 9px; min-width: 0; }
+  input[type=number] { width: 90px; }
+  label.field { display: block; margin: 12px 0; }
+  label.field > span:first-child { display: block; font-weight: 600; margin-bottom: 4px; }
+  .hint { display: block; color: var(--muted); font-size: 13px; margin-top: 3px; }
+  .switch { position: relative; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; }
+  .switch input { position: absolute; opacity: 0; width: 0; height: 0; }
+  .switch .track { width: 38px; height: 22px; border-radius: 999px; background: var(--offline); position: relative; transition: background .15s; flex: none; }
+  .switch .track::after { content: ""; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: transform .15s; }
+  .switch input:checked + .track { background: var(--on); }
+  .switch input:checked + .track::after { transform: translateX(16px); }
+  .switch input:focus-visible + .track { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; box-shadow: var(--shadow);
+    display: flex; flex-direction: column; gap: 10px; }
+  .card-head { display: flex; align-items: flex-start; gap: 10px; }
+  .card-head .name { font-weight: 700; font-size: 16px; }
+  .card-head .meta { color: var(--muted); font-size: 12.5px; }
+  .pill { margin-left: auto; border-radius: 999px; padding: 2px 10px; font-size: 12.5px; font-weight: 700; white-space: nowrap; }
+  .pill.on { color: var(--on); background: var(--on-bg); }
+  .pill.standby { color: var(--standby); background: var(--standby-bg); }
+  .pill.offline, .pill.unknown { color: var(--offline); background: var(--offline-bg); }
+  .activity { font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .activity .tag { font-size: 12px; font-weight: 600; border-radius: 6px; padding: 1px 7px; background: var(--chip); color: var(--muted); }
+  .activity .tag.target { background: var(--on-bg); color: var(--on); }
+  .kv { display: grid; grid-template-columns: auto 1fr; gap: 3px 12px; font-size: 13.5px; }
+  .kv dt { color: var(--muted); }
+  .kv dd { margin: 0; }
+  .err-text { color: var(--err); font-size: 13px; }
+  .actions { display: flex; gap: 6px; flex-wrap: wrap; border-top: 1px solid var(--line); padding-top: 10px; }
+  details.menu { position: relative; }
+  details.menu > summary { list-style: none; }
+  details.menu > summary::-webkit-details-marker { display: none; }
+  details.menu .menu-items { position: absolute; z-index: 5; top: calc(100% + 4px); left: 0; background: var(--panel); border: 1px solid var(--line);
+    border-radius: 10px; padding: 6px; box-shadow: 0 6px 24px rgba(0,0,0,.15); display: flex; flex-direction: column; min-width: 170px; }
+  details.menu.right .menu-items { left: auto; right: 0; }
+  .menu-items button { text-align: left; border: 0; background: none; font: inherit; font-size: 14px; color: var(--text); padding: 7px 10px; border-radius: 6px; cursor: pointer; }
+  .menu-items button:hover { background: var(--chip); }
+  .menu-items button.danger { color: var(--err); }
+
+  .empty { text-align: center; padding: 36px 16px; }
+  .empty p { max-width: 520px; margin: 8px auto 18px; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; padding: 8px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 13px; }
+  .table-scroll { overflow-x: auto; }
+  .log td.time { white-space: nowrap; color: var(--muted); }
+  .log tr.error td { color: var(--err); }
+  .days { display: flex; gap: 4px; flex-wrap: wrap; }
+  .days label { display: inline-flex; align-items: center; gap: 4px; background: var(--chip); border-radius: 8px; padding: 4px 8px; font-size: 13px; cursor: pointer; }
+  .checks { display: flex; gap: 6px 14px; flex-wrap: wrap; }
+  .checks label { display: inline-flex; gap: 6px; align-items: center; font-size: 14px; }
+  .radio-list label { display: flex; gap: 8px; align-items: flex-start; margin: 6px 0; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 0 24px; }
+  @media (max-width: 760px) { .two-col { grid-template-columns: 1fr; } .grid { grid-template-columns: 1fr; } }
+
+  #toast { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); background: var(--text); color: var(--bg);
+    padding: 9px 16px; border-radius: 10px; font-size: 14px; opacity: 0; pointer-events: none; transition: opacity .2s; max-width: calc(100% - 32px); z-index: 20; }
+  #toast.show { opacity: 1; }
+  #toast.error { background: var(--err); color: #fff; }
+  .banner { background: var(--err-bg); color: var(--err); border-radius: 10px; padding: 10px 14px; margin-bottom: 16px; }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="top">
+      <h1>📺 Roku TV Manager</h1>
+      <div class="summary" id="summary"></div>
+      <label class="switch" title="Master switch for keep-awake pings">
+        <input type="checkbox" id="master-keepawake"><span class="track"></span><span>Keep-awake</span>
+      </label>
+    </div>
+    <nav id="tabs">
+      <button data-tab="tvs" class="active">TVs</button>
+      <button data-tab="schedules">Schedules</button>
+      <button data-tab="settings">Settings</button>
+      <button data-tab="activity">Activity</button>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <div id="conn-banner" class="banner" hidden>Can't reach the Roku TV Manager service. Is it still running?</div>
+
+  <!-- TVs -->
+  <section id="tab-tvs">
+    <div id="tv-grid" class="grid"></div>
+    <div class="panel" id="add-panel" style="margin-top:16px">
+      <h2>Find TVs</h2>
+      <div class="row">
+        <button class="btn primary" data-discover="ssdp">Search the network</button>
+        <button class="btn" data-discover="scan">Scan subnet</button>
+        <span class="muted small" id="discover-status"></span>
+      </div>
+      <p class="muted small">“Search” asks Rokus to announce themselves (a few seconds). If a TV doesn't show up, “Scan subnet” checks every address in your network (subnet is set in Settings, otherwise this computer's /24), or add the TV by its IP address:</p>
+      <form class="row" id="add-form">
+        <input type="text" id="add-host" placeholder="192.168.1.50" aria-label="TV IP address">
+        <button class="btn">Add by IP</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- Schedules -->
+  <section id="tab-schedules" hidden>
+    <div class="panel">
+      <h2>Schedules</h2>
+      <p class="muted small" style="margin-top:-6px">Times use this computer's clock (<span id="server-clock"></span>).</p>
+      <div class="table-scroll"><table id="sched-table"></table></div>
+    </div>
+    <div class="panel">
+      <h2 id="sched-form-title">Add a schedule</h2>
+      <form id="sched-form">
+        <div class="two-col">
+          <label class="field"><span>Name</span><input type="text" name="name" placeholder="e.g. Lobby TVs on for Sunday"></label>
+          <label class="field"><span>Action</span><select name="action" id="sched-action"></select></label>
+          <label class="field"><span>Time</span><input type="time" name="time" required value="08:00"></label>
+          <div class="field"><span style="display:block;font-weight:600;margin-bottom:4px">Days</span>
+            <div class="days" id="sched-days"></div>
+          </div>
+        </div>
+        <div class="field"><span style="display:block;font-weight:600;margin-bottom:4px">TVs</span>
+          <div class="checks" id="sched-devices"></div>
+        </div>
+        <div class="row">
+          <button class="btn primary" id="sched-submit">Add schedule</button>
+          <button class="btn" type="button" id="sched-cancel" hidden>Cancel edit</button>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <!-- Settings -->
+  <section id="tab-settings" hidden>
+    <form id="settings-form">
+      <div class="panel">
+        <h2>Keep-awake</h2>
+        <label class="switch"><input type="checkbox" name="ka_enabled"><span class="track"></span><span>Send keep-awake pings</span></label>
+        <div class="two-col">
+          <label class="field"><span>Ping every</span>
+            <span class="row"><input type="number" name="ka_interval" min="1" max="1440"> minutes</span>
+            <span class="hint">Each TV can override this from its card. Keep it shorter than the TV's sleep timer (Roku's power-saving timer is usually 4 hours).</span>
+          </label>
+          <label class="field"><span>Ping with these buttons</span>
+            <select name="ka_keys_preset">
+              <option value="VolumeDown,VolumeUp">Volume down, then up (recommended)</option>
+              <option value="VolumeMute,VolumeMute">Mute, then unmute</option>
+              <option value="custom">Custom…</option>
+            </select>
+            <input type="text" name="ka_keys_custom" placeholder="e.g. Up, Down" style="margin-top:6px;width:100%" hidden>
+            <span class="hint" id="keys-hint">Counts as remote activity without changing what's on screen. The volume bar flashes briefly.</span>
+          </label>
+        </div>
+        <h3>Which TVs get pinged</h3>
+        <div class="radio-list">
+          <label><input type="radio" name="ka_only_when" value="any"> <span>Any TV that's on, whatever it's showing</span></label>
+          <label><input type="radio" name="ka_only_when" value="target_app"> <span>Only TVs showing the target app (<span class="target-name"></span>)</span></label>
+        </div>
+        <h3>When a TV is off</h3>
+        <div class="radio-list">
+          <label><input type="radio" name="ka_when_off" value="leave_off"> <span>Leave it off <span class="muted">(recommended)</span></span></label>
+          <label><input type="radio" name="ka_when_off" value="power_on"> <span>Turn it back on</span></label>
+          <label><input type="radio" name="ka_when_off" value="power_on_launch"> <span>Turn it back on and open <span class="target-name"></span></span></label>
+        </div>
+        <p class="hint">A TV turned off from this app or by a schedule always stays off until it's turned on again here or by a schedule.</p>
+        <h3>When a TV is on something else (HDMI, another app, Home)</h3>
+        <div class="radio-list">
+          <label><input type="radio" name="ka_when_other_app" value="leave"> <span>Leave it alone</span></label>
+          <label><input type="radio" name="ka_when_other_app" value="launch_target"> <span>Switch it back to <span class="target-name"></span></span></label>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Target app</h2>
+        <p class="muted small" style="margin-top:-6px">The app the TVs should stay on. Jellyfin's Roku ID is 592369.</p>
+        <div class="row">
+          <input type="text" name="target_name" placeholder="Name" aria-label="Target app name">
+          <input type="text" name="target_id" placeholder="App ID" aria-label="Target app ID" style="width:120px">
+          <button class="btn" type="button" id="pick-app">Pick from a TV…</button>
+          <select id="app-picker" hidden aria-label="Installed apps"></select>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Monitoring</h2>
+        <div class="two-col">
+          <label class="field"><span>Check TV status every</span>
+            <span class="row"><input type="number" name="poll" min="5" max="3600"> seconds</span>
+          </label>
+          <label class="field"><span>Subnet to scan</span>
+            <input type="text" name="subnet" placeholder="e.g. 192.168.1.0/24 (blank = automatic)" style="width:100%">
+          </label>
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:16px">
+        <button class="btn primary">Save settings</button>
+        <button class="btn" type="button" id="settings-reset">Discard changes</button>
+        <span class="muted small" id="settings-status"></span>
+      </div>
+    </form>
+  </section>
+
+  <!-- Activity -->
+  <section id="tab-activity" hidden>
+    <div class="panel">
+      <h2>Activity</h2>
+      <div class="table-scroll"><table class="log" id="log-table"></table></div>
+    </div>
+  </section>
+</main>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+const DAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+let state = null;
+let clockOffset = 0;            // server time - browser time, seconds
+let settingsDirty = false;
+let editingSchedule = null;
+const cardCache = new Map();    // device id -> signature of last render
+const openMenus = new Set();
+
+const $ = (sel, root = document) => root.querySelector(sel);
+const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const nowServer = () => Date.now() / 1000 + clockOffset;
+
+async function api(method, path, body) {
+  const opts = { method, headers: {} };
+  if (body !== undefined || method !== "GET") {
+    opts.headers["Content-Type"] = "application/json";
+    opts.body = JSON.stringify(body ?? {});
+  }
+  const res = await fetch(path, opts);
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
+  return data;
+}
+
+let toastTimer;
+function toast(msg, isError = false) {
+  const t = $("#toast");
+  t.textContent = msg;
+  t.className = "show" + (isError ? " error" : "");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.className = "", isError ? 6000 : 3000);
+}
+
+function fmtDuration(sec) {
+  sec = Math.max(0, Math.round(sec));
+  if (sec < 60) return `${sec}s`;
+  const m = Math.round(sec / 60);
+  if (m < 60) return `${m} min`;
+  const h = Math.floor(m / 60), mm = m % 60;
+  return mm ? `${h} h ${mm} min` : `${h} h`;
+}
+function relText(ts, mode) {
+  const d = ts - nowServer();
+  if (mode === "in") return d <= 1 ? "any moment" : `in ${fmtDuration(d)}`;
+  return -d < 5 ? "just now" : `${fmtDuration(-d)} ago`;
+}
+function updateRelTimes() {
+  $$("[data-ts]").forEach(el => el.textContent = relText(+el.dataset.ts, el.dataset.mode));
+  const clock = $("#server-clock");
+  if (clock) clock.textContent = new Date(nowServer() * 1000).toLocaleTimeString([], {hour: "numeric", minute: "2-digit"});
+}
+
+// ---------- rendering ----------
+
+function render() {
+  if (!state) return;
+  renderSummary();
+  renderCards();
+  renderSchedules();
+  renderLog();
+  if (!settingsDirty) fillSettings();
+  $("#master-keepawake").checked = state.settings.keepawake.enabled;
+  $$(".target-name").forEach(el => el.textContent = state.settings.target_app.name);
+  updateRelTimes();
+}
+
+function renderSummary() {
+  const counts = { on: 0, standby: 0, offline: 0 };
+  for (const d of state.devices) counts[d.status?.power ?? "offline"]++;
+  $("#summary").innerHTML = state.devices.length
+    ? `<span class="chip"><b>${counts.on}</b> on</span><span class="chip"><b>${counts.standby}</b> off</span>` +
+      (counts.offline ? `<span class="chip"><b>${counts.offline}</b> not responding</span>` : "")
+    : "";
+}
+
+function powerLabel(st) {
+  if (!st) return ["unknown", "Checking…"];
+  return { on: ["on", "On"], standby: ["standby", "Off"], offline: ["offline", "Not responding"] }[st.power];
+}
+
+function pingLine(d) {
+  const ka = state.settings.keepawake;
+  if (!ka.enabled) return `<span class="muted">Paused (keep-awake is off)</span>`;
+  if (!d.keepawake_enabled) return `<span class="muted">Off for this TV</span>`;
+  if (d.next_ping_at == null) return "—";
+  return `<span data-ts="${d.next_ping_at}" data-mode="in"></span>`;
+}
+
+function cardHtml(d) {
+  const st = d.status;
+  const [cls, label] = powerLabel(st);
+  const t = state.settings.target_app;
+  let activity = st ? esc(st.activity) : "Checking…";
+  if (st?.playback) activity += ` <span class="tag">${esc(st.playback)}</span>`;
+  if (st?.on_target) activity += ` <span class="tag target">target app</span>`;
+  const interval = d.interval_minutes ? `${d.interval_minutes} min (this TV)` : `${d.effective_interval_minutes} min`;
+  const lastPing = d.ping.last_result
+    ? `${esc(d.ping.last_result)} · <span data-ts="${d.ping.last_at}" data-mode="ago"></span>` : "Not yet";
+  const offline = !st || !st.reachable;
+  return `
+    <div class="card-head">
+      <div>
+        <div class="name">${esc(d.name)}</div>
+        <div class="meta">${esc(d.model || "Roku")} · ${esc(d.host)}${d.held_off ? " · held off" : ""}</div>
+      </div>
+      <span class="pill ${cls}">${label}</span>
+    </div>
+    <div class="activity">${activity}</div>
+    ${st?.error ? `<div class="err-text">${esc(st.error)}</div>` : ""}
+    <dl class="kv">
+      <dt>Keep-awake</dt>
+      <dd><label class="switch small"><input type="checkbox" data-act="toggle-ka" ${d.keepawake_enabled ? "checked" : ""}><span class="track"></span><span>every ${interval}</span></label></dd>
+      <dt>Next ping</dt><dd>${pingLine(d)}</dd>
+      <dt>Last ping</dt><dd>${lastPing}</dd>
+      <dt>Checked</dt><dd>${st ? `<span data-checked data-ts="${st.checked_at}" data-mode="ago"></span>` : "—"}</dd>
+    </dl>
+    <div class="actions">
+      <button class="btn" data-cmd="ping" ${offline ? "disabled" : ""} title="Send the keep-awake buttons now (never turns a TV on)">Ping now</button>
+      ${st?.power === "on"
+        ? `<button class="btn" data-cmd="power_off">Turn off</button>`
+        : `<button class="btn" data-cmd="power_on" ${offline ? "disabled" : ""}>Turn on</button>`}
+      <button class="btn" data-cmd="launch_target" ${st?.power !== "on" ? "disabled" : ""}>Open ${esc(t.name)}</button>
+      <details class="menu" data-menu="input-${esc(d.id)}">
+        <summary class="btn" ${st?.power !== "on" ? 'style="opacity:.5;pointer-events:none"' : ""}>Input ▾</summary>
+        <div class="menu-items">
+          ${[1,2,3,4].map(n => `<button data-cmd="input_hdmi${n}">HDMI ${n}</button>`).join("")}
+          <button data-cmd="home">Home screen</button>
+        </div>
+      </details>
+      <details class="menu right" data-menu="more-${esc(d.id)}" style="margin-left:auto">
+        <summary class="btn" aria-label="More options">⋯</summary>
+        <div class="menu-items">
+          <button data-act="rename">Rename…</button>
+          <button data-act="interval">Ping interval for this TV…</button>
+          <button data-cmd="refresh">Refresh status</button>
+          <button data-act="remove" class="danger">Remove from app</button>
+        </div>
+      </details>
+    </div>`;
+}
+
+function renderCards() {
+  const grid = $("#tv-grid");
+  if (!state.devices.length) {
+    grid.innerHTML = `<div class="panel empty" style="grid-column:1/-1"><h2>No TVs yet</h2>
+      <p class="muted">Use <b>Search the network</b> below to find the Rokus on your network. This computer must be on the same network as the TVs.</p></div>`;
+    cardCache.clear();
+    return;
+  }
+  if (grid.querySelector(".empty")) grid.innerHTML = "";
+  const ids = new Set(state.devices.map(d => d.id));
+  for (const el of $$(".card", grid)) if (!ids.has(el.dataset.id)) { el.remove(); cardCache.delete(el.dataset.id); }
+
+  state.devices.forEach((d, i) => {
+    const sig = JSON.stringify([d, state.settings.keepawake, state.settings.target_app], (k, v) => k === "checked_at" ? undefined : v);
+    let el = grid.querySelector(`.card[data-id="${CSS.escape(d.id)}"]`);
+    if (!el) { el = document.createElement("div"); el.className = "card"; el.dataset.id = d.id; }
+    if (grid.children[i] !== el) grid.insertBefore(el, grid.children[i] || null);
+    if (cardCache.get(d.id) !== sig) {
+      el.innerHTML = cardHtml(d);
+      cardCache.set(d.id, sig);
+      $$("details.menu", el).forEach(m => { if (openMenus.has(m.dataset.menu)) m.open = true; });
+    } else if (d.status) {
+      const checked = el.querySelector("[data-checked]");
+      if (checked) checked.dataset.ts = d.status.checked_at;
+    }
+  });
+}
+
+function deviceName(id) { return state.devices.find(d => d.id === id)?.name ?? "(removed TV)"; }
+
+function daysText(days) {
+  const k = days.join(",");
+  if (k === "0,1,2,3,4,5,6") return "Every day";
+  if (k === "0,1,2,3,4") return "Weekdays";
+  if (k === "5,6") return "Weekends";
+  return days.map(d => DAY_NAMES[d]).join(", ");
+}
+function timeText(hhmm) {
+  const [h, m] = hhmm.split(":").map(Number);
+  return new Date(2000, 0, 1, h, m).toLocaleTimeString([], {hour: "numeric", minute: "2-digit"});
+}
+
+function renderSchedules() {
+  const table = $("#sched-table");
+  const actions = state.options.schedule_actions;
+  if (!state.schedules.length) {
+    table.innerHTML = `<tr><td class="muted">No schedules yet. Add one below, for example turning the lobby TVs on at 8:00 AM on Sundays and off at 1:00 PM.</td></tr>`;
+  } else {
+    table.innerHTML = `<tr><th>On</th><th>Name</th><th>When</th><th>Action</th><th>TVs</th><th></th></tr>` +
+      [...state.schedules].sort((a, b) => a.time.localeCompare(b.time)).map(s => `
+      <tr data-sched="${esc(s.id)}">
+        <td><label class="switch"><input type="checkbox" data-sact="toggle" ${s.enabled ? "checked" : ""} aria-label="Enabled"><span class="track"></span></label></td>
+        <td>${esc(s.name)}</td>
+        <td style="white-space:nowrap">${timeText(s.time)}<div class="muted small">${daysText(s.days)}</div></td>
+        <td>${esc(actions[s.action])}</td>
+        <td>${s.devices === "all" ? "All TVs" : s.devices.map(id => esc(deviceName(id))).join(", ")}</td>
+        <td><div class="row" style="justify-content:flex-end">
+          <button class="btn" data-sact="run">Run now</button>
+          <button class="btn" data-sact="edit">Edit</button>
+          <button class="btn danger" data-sact="delete">Delete</button></div></td>
+      </tr>`).join("");
+  }
+  const select = $("#sched-action");
+  if (!select.options.length) {
+    select.innerHTML = Object.entries(actions).map(([v, l]) => `<option value="${v}">${esc(l)}</option>`).join("");
+    $("#sched-days").innerHTML = DAY_NAMES.map((n, i) => `<label><input type="checkbox" name="day" value="${i}" checked> ${n}</label>`).join("");
+  }
+  const box = $("#sched-devices");
+  const selected = new Set($$("input[name=dev]:checked", box).map(i => i.value));
+  const allChecked = $("input[name=dev_all]", box)?.checked ?? true;
+  box.innerHTML = `<label><input type="checkbox" name="dev_all" ${allChecked ? "checked" : ""}> <b>All TVs</b></label>` +
+    state.devices.map(d => `<label><input type="checkbox" name="dev" value="${esc(d.id)}" ${selected.has(d.id) ? "checked" : ""} ${allChecked ? "disabled" : ""}> ${esc(d.name)}</label>`).join("");
+}
+
+function renderLog() {
+  const rows = state.log.map(e => `<tr class="${e.level}">
+    <td class="time">${new Date(e.at * 1000).toLocaleString([], {month: "short", day: "numeric", hour: "numeric", minute: "2-digit", second: "2-digit"})}</td>
+    <td>${esc(e.device ?? "")}</td><td>${esc(e.message)}</td></tr>`).join("");
+  $("#log-table").innerHTML = `<tr><th>Time</th><th>TV</th><th>What happened</th></tr>` + (rows || `<tr><td colspan="3" class="muted">Nothing yet.</td></tr>`);
+}
+
+function fillSettings() {
+  const f = $("#settings-form"), s = state.settings, ka = s.keepawake;
+  f.ka_enabled.checked = ka.enabled;
+  f.ka_interval.value = ka.interval_minutes;
+  const keys = ka.keys.join(",");
+  const preset = [...f.ka_keys_preset.options].some(o => o.value === keys) ? keys : "custom";
+  f.ka_keys_preset.value = preset;
+  f.ka_keys_custom.value = ka.keys.join(", ");
+  f.ka_keys_custom.hidden = preset !== "custom";
+  f.ka_only_when.value = ka.only_when;
+  f.ka_when_off.value = ka.when_off;
+  f.ka_when_other_app.value = ka.when_other_app;
+  f.target_name.value = s.target_app.name;
+  f.target_id.value = s.target_app.id;
+  f.poll.value = s.status_poll_seconds;
+  f.subnet.value = s.discovery_subnet;
+  $("#keys-hint").textContent = "Counts as remote activity without changing what's on screen. Allowed buttons: " + state.options.keepalive_keys.join(", ") + ".";
+}
+
+// ---------- data loop ----------
+
+async function refresh() {
+  try {
+    const t0 = Date.now() / 1000;
+    state = await api("GET", "/api/state");
+    clockOffset = state.server_time - (t0 + Date.now() / 1000) / 2;
+    $("#conn-banner").hidden = true;
+    render();
+  } catch (e) {
+    $("#conn-banner").hidden = false;
+  }
+}
+
+// ---------- events ----------
+
+$("#tabs").addEventListener("click", e => {
+  const b = e.target.closest("button[data-tab]");
+  if (!b) return;
+  $$("#tabs button").forEach(x => x.classList.toggle("active", x === b));
+  $$("main > section").forEach(s => s.hidden = s.id !== "tab-" + b.dataset.tab);
+});
+
+$("#master-keepawake").addEventListener("change", async e => {
+  try { await api("PUT", "/api/settings", { keepawake: { enabled: e.target.checked } }); toast(e.target.checked ? "Keep-awake on" : "Keep-awake paused"); }
+  catch (err) { toast(err.message, true); }
+  settingsDirty = false;
+  refresh();
+});
+
+document.addEventListener("toggle", e => {
+  const m = e.target;
+  if (m.matches?.("details.menu")) m.open ? openMenus.add(m.dataset.menu) : openMenus.delete(m.dataset.menu);
+}, true);
+document.addEventListener("click", e => {
+  $$("details.menu[open]").forEach(m => { if (!m.contains(e.target)) m.open = false; });
+});
+
+$("#tv-grid").addEventListener("click", async e => {
+  const card = e.target.closest(".card");
+  if (!card) return;
+  const id = card.dataset.id, d = state.devices.find(x => x.id === id);
+  const cmdBtn = e.target.closest("[data-cmd]"), actBtn = e.target.closest("button[data-act]");
+  if (cmdBtn || actBtn) $$("details.menu[open]", card).forEach(m => m.open = false);
+  try {
+    if (cmdBtn) {
+      cmdBtn.disabled = true;
+      const r = await api("POST", `/api/devices/${encodeURIComponent(id)}/command`, { command: cmdBtn.dataset.cmd });
+      toast(`${d.name}: ${r.message}`);
+    } else if (actBtn?.dataset.act === "rename") {
+      const name = prompt("Name for this TV:", d.name);
+      if (name) await api("PATCH", `/api/devices/${encodeURIComponent(id)}`, { name });
+    } else if (actBtn?.dataset.act === "interval") {
+      const v = prompt(`Ping ${d.name} every how many minutes? Leave blank to use the default (${state.settings.keepawake.interval_minutes} min).`, d.interval_minutes ?? "");
+      if (v === null) return;
+      await api("PATCH", `/api/devices/${encodeURIComponent(id)}`, { interval_minutes: v.trim() === "" ? null : Number(v) });
+    } else if (actBtn?.dataset.act === "remove") {
+      if (confirm(`Remove ${d.name} from the app? It will also be removed from schedules.`)) {
+        await api("DELETE", `/api/devices/${encodeURIComponent(id)}`);
+        toast(`${d.name} removed`);
+      }
+    }
+  } catch (err) { toast(err.message, true); }
+  finally { if (cmdBtn) cmdBtn.disabled = false; }
+  refresh();
+});
+$("#tv-grid").addEventListener("change", async e => {
+  if (e.target.dataset.act !== "toggle-ka") return;
+  const id = e.target.closest(".card").dataset.id;
+  try { await api("PATCH", `/api/devices/${encodeURIComponent(id)}`, { keepawake_enabled: e.target.checked }); }
+  catch (err) { toast(err.message, true); }
+  refresh();
+});
+
+$$("[data-discover]").forEach(b => b.addEventListener("click", async () => {
+  const status = $("#discover-status");
+  $$("[data-discover]").forEach(x => x.disabled = true);
+  status.textContent = b.dataset.discover === "ssdp" ? "Searching…" : "Scanning (up to ~30 seconds)…";
+  try {
+    const r = await api("POST", "/api/discover", { method: b.dataset.discover });
+    status.textContent = r.found
+      ? `Found ${r.found} Roku${r.found === 1 ? "" : "s"}` + (r.added.length ? `, added ${r.added.join(", ")}` : ", all already added")
+      : "No Rokus answered. Try Scan subnet or add by IP.";
+  } catch (err) { status.textContent = ""; toast(err.message, true); }
+  $$("[data-discover]").forEach(x => x.disabled = false);
+  refresh();
+}));
+
+$("#add-form").addEventListener("submit", async e => {
+  e.preventDefault();
+  const host = $("#add-host").value.trim();
+  if (!host) return;
+  try { const d = await api("POST", "/api/devices", { host }); toast(`Added ${d.name}`); $("#add-host").value = ""; }
+  catch (err) { toast(err.message, true); }
+  refresh();
+});
+
+// Settings
+const sf = $("#settings-form");
+sf.addEventListener("input", () => { settingsDirty = true; $("#settings-status").textContent = "Unsaved changes"; });
+sf.ka_keys_preset.addEventListener("change", () => { sf.ka_keys_custom.hidden = sf.ka_keys_preset.value !== "custom"; });
+$("#settings-reset").addEventListener("click", () => { settingsDirty = false; $("#settings-status").textContent = ""; $("#app-picker").hidden = true; fillSettings(); });
+sf.addEventListener("submit", async e => {
+  e.preventDefault();
+  const keys = (sf.ka_keys_preset.value === "custom" ? sf.ka_keys_custom.value : sf.ka_keys_preset.value)
+    .split(",").map(k => k.trim()).filter(Boolean);
+  const payload = {
+    status_poll_seconds: Number(sf.poll.value),
+    discovery_subnet: sf.subnet.value,
+    target_app: { id: sf.target_id.value, name: sf.target_name.value },
+    keepawake: {
+      enabled: sf.ka_enabled.checked,
+      interval_minutes: Number(sf.ka_interval.value),
+      keys,
+      only_when: sf.ka_only_when.value,
+      when_off: sf.ka_when_off.value,
+      when_other_app: sf.ka_when_other_app.value,
+    },
+  };
+  try {
+    await api("PUT", "/api/settings", payload);
+    settingsDirty = false;
+    $("#settings-status").textContent = "Saved";
+    $("#app-picker").hidden = true;
+    toast("Settings saved");
+  } catch (err) { toast(err.message, true); }
+  refresh();
+});
+$("#pick-app").addEventListener("click", async () => {
+  const d = state.devices.find(x => x.status?.reachable);
+  if (!d) return toast("No TV is responding right now", true);
+  try {
+    const { apps } = await api("GET", `/api/devices/${encodeURIComponent(d.id)}/apps`);
+    const picker = $("#app-picker");
+    picker.innerHTML = `<option value="">Apps on ${esc(d.name)}…</option>` +
+      apps.sort((a, b) => a.name.localeCompare(b.name)).map(a => `<option value="${esc(a.id)}">${esc(a.name)}</option>`).join("");
+    picker.hidden = false;
+  } catch (err) { toast(err.message, true); }
+});
+$("#app-picker").addEventListener("change", e => {
+  const opt = e.target.selectedOptions[0];
+  if (!opt.value) return;
+  sf.target_id.value = opt.value;
+  sf.target_name.value = opt.textContent;
+  settingsDirty = true;
+  $("#settings-status").textContent = "Unsaved changes";
+});
+
+// Schedules
+const schedForm = $("#sched-form");
+$("#sched-devices").addEventListener("change", e => {
+  if (e.target.name === "dev_all") $$("input[name=dev]", schedForm).forEach(i => i.disabled = e.target.checked);
+});
+function resetScheduleForm() {
+  editingSchedule = null;
+  schedForm.reset();
+  $$("input[name=day]", schedForm).forEach(i => i.checked = true);
+  $("input[name=dev_all]", schedForm).checked = true;
+  $$("input[name=dev]", schedForm).forEach(i => { i.checked = false; i.disabled = true; });
+  $("#sched-form-title").textContent = "Add a schedule";
+  $("#sched-submit").textContent = "Add schedule";
+  $("#sched-cancel").hidden = true;
+}
+$("#sched-cancel").addEventListener("click", resetScheduleForm);
+schedForm.addEventListener("submit", async e => {
+  e.preventDefault();
+  const all = $("input[name=dev_all]", schedForm).checked;
+  const payload = {
+    name: schedForm.name.value,
+    action: schedForm.action.value,
+    time: schedForm.time.value,
+    days: $$("input[name=day]:checked", schedForm).map(i => Number(i.value)),
+    devices: all ? "all" : $$("input[name=dev]:checked", schedForm).map(i => i.value),
+  };
+  try {
+    if (editingSchedule) await api("PUT", `/api/schedules/${editingSchedule}`, payload);
+    else await api("POST", "/api/schedules", payload);
+    toast(editingSchedule ? "Schedule updated" : "Schedule added");
+    resetScheduleForm();
+  } catch (err) { toast(err.message, true); }
+  refresh();
+});
+$("#sched-table").addEventListener("click", async e => {
+  const b = e.target.closest("button[data-sact]");
+  if (!b) return;
+  const id = b.closest("tr").dataset.sched, s = state.schedules.find(x => x.id === id);
+  try {
+    if (b.dataset.sact === "run") {
+      const r = await api("POST", `/api/schedules/${id}/run`);
+      toast(`Running “${s.name}” on ${r.tvs} TV(s)`);
+    } else if (b.dataset.sact === "delete") {
+      if (confirm(`Delete schedule “${s.name}”?`)) await api("DELETE", `/api/schedules/${id}`);
+    } else if (b.dataset.sact === "edit") {
+      editingSchedule = id;
+      schedForm.name.value = s.name;
+      schedForm.action.value = s.action;
+      schedForm.time.value = s.time;
+      $$("input[name=day]", schedForm).forEach(i => i.checked = s.days.includes(Number(i.value)));
+      const all = s.devices === "all";
+      $("input[name=dev_all]", schedForm).checked = all;
+      $$("input[name=dev]", schedForm).forEach(i => { i.disabled = all; i.checked = !all && s.devices.includes(i.value); });
+      $("#sched-form-title").textContent = `Edit “${s.name}”`;
+      $("#sched-submit").textContent = "Save changes";
+      $("#sched-cancel").hidden = false;
+      schedForm.scrollIntoView({ behavior: "smooth" });
+      return;
+    }
+  } catch (err) { toast(err.message, true); }
+  refresh();
+});
+$("#sched-table").addEventListener("change", async e => {
+  if (e.target.dataset.sact !== "toggle") return;
+  const id = e.target.closest("tr").dataset.sched;
+  try { await api("PUT", `/api/schedules/${id}`, { enabled: e.target.checked }); }
+  catch (err) { toast(err.message, true); }
+  refresh();
+});
+
+refresh();
+setInterval(refresh, 3000);
+setInterval(updateRelTimes, 1000);
+</script>
+</body>
+</html>

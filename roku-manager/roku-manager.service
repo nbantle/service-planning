@@ -1,0 +1,15 @@
+[Unit]
+Description=Roku TV Manager
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+# Change these to match where you put the app and which user should run it.
+User=jellyfin
+WorkingDirectory=/opt/roku-manager
+ExecStart=/usr/bin/python3 /opt/roku-manager/run.py --port 8765
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
